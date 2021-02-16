@@ -29,37 +29,45 @@ public class InputReader {
 
     // src/s285600/computationalmath/gauss_seidel/input.txt
     private void readFile(String filename) {
+        filename = "src/s285600/computationalmath/gauss_seidel/input.txt";
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            List<Integer> dim = readList(br);
-            List<List<Integer>> matrix = new ArrayList<>();
-            for (int i = 0; i < dim.get(0); i++) {
-                try {
-                    matrix.add(readList(br));
-                } catch (NumberFormatException e) {
-                    break;
-                }
+            int n = Integer.parseInt(br.readLine());
+            double[][] matrix = new double[n][n];
+            for (int i = 0; i < n; i++) {
+                matrix[i] = readArray(br);
             }
-            System.out.println(matrix);
+            double[] free = Arrays.stream(br.readLine().split(" ")).mapToDouble(Double::parseDouble).toArray();
+            double [][] j = new double[free.length][1];
+            for (int i = 0; i < free.length; i++)
+                j[i][0] = free[i];
+            new GaussZeidel().solve(matrix, j);
+            //System.out.println(Arrays.deepToString(matrix));
         } catch (IOException e) {
             //TODO handle exception
         }
 
     }
 
+    private double[] readArray(BufferedReader br) throws IOException {
+        try {
+            return Arrays.stream(br.readLine().split(" ")).mapToDouble(Double::parseDouble).toArray();
+        } catch (IOException | NumberFormatException e) {
+            System.out.println("Некорректный файл.");
+            read();
+            return new double[0];
+        }
+    }
+
     public boolean validate() {
         return false;
     }
 
-    private List<Integer> readList(BufferedReader br) throws IOException {
-        return Arrays.stream(br.readLine().split(" ")).map(Integer::parseInt).collect(Collectors.toList());
-    }
-
-    private int[][] readConsole(Scanner in) {
+    private double[][] readConsole(Scanner in) {
         System.out.println("Введите два числа (размерность матрицы m x n): ");
         try {
             int m = in.nextInt();
             int n = in.nextInt();
-            int[][] a = new int[m][n + 1];
+            double[][] a = new double[m][n + 1];
             System.out.println("Построчно введите коэффициенты матрицы:");
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
@@ -76,7 +84,7 @@ public class InputReader {
             System.out.println("Произошла ошибка. Повторите ввод заново.");
             in.nextLine();
             readConsole(in);
-            return new int[0][0];
+            return new double[0][0];
             //TODO catch
         }
     }
