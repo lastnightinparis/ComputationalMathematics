@@ -24,10 +24,6 @@ public class InputReader {
             readFile(input);
     }
 
-    private boolean validate(String s) {
-        return true;
-    }
-
     // src/s285600/computationalmath/gauss_seidel/input.txt
     private void readFile(String filename) {
         filename = "src/s285600/computationalmath/gauss_seidel/input.txt";
@@ -41,7 +37,8 @@ public class InputReader {
             double [][] j = new double[free.length][1];
             for (int i = 0; i < free.length; i++)
                 j[i][0] = free[i];
-            new GaussZeidel().solve(matrix, j);
+            double eps = Double.parseDouble(br.readLine());
+            new GaussZeidel().solve(matrix, j, eps);
             //System.out.println(Arrays.deepToString(matrix));
         } catch (IOException e) {
             //TODO handle exception
@@ -54,6 +51,7 @@ public class InputReader {
             return Arrays.stream(br.readLine().split(" ")).mapToDouble(Double::parseDouble).toArray();
         } catch (IOException | NumberFormatException e) {
             System.out.println("Некорректный файл.");
+            e.printStackTrace();
             read();
             return new double[0];
         }
