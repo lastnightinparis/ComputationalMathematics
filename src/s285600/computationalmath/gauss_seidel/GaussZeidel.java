@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 public class GaussZeidel {
     public void solve(double[][] m, double[][] f, double eps) {
         RealMatrix matrix = MatrixUtils.createRealMatrix(m);
-        RealMatrix free = MatrixUtils.createRealMatrix(f);
-        normalizeMatrix(matrix, free, eps);
+        RealMatrix free_column = MatrixUtils.createRealMatrix(f);
+        normalizeMatrix(matrix, free_column, eps);
     }
 
     public void normalizeMatrix(RealMatrix matrix, RealMatrix free_column, double eps) {
@@ -25,7 +25,7 @@ public class GaussZeidel {
             transform(matrix, free_column);
             solution(matrix, free_column, eps);
         } else {
-            System.out.println("Давайте-ка приведём матрицу к норм виду");
+            System.out.println("Исходная матрица не имеет диагонального преобладания, но мы попробуем привести её к этому виду");
             RealMatrix transformed = modifyToDiagonalPred(matrix, free_column);
             if (diagonalPredominance(transformed)) {
                 System.out.println("Матрица приведена к виду диагонального преобладания");
@@ -49,7 +49,6 @@ public class GaussZeidel {
             g.setRow(i, f.getRow(index));
         }
         f.setColumnMatrix(0, g);
-        System.out.println(transformed);
         return transformed;
     }
 
@@ -80,46 +79,41 @@ public class GaussZeidel {
     }
 
     public void solution(RealMatrix m, RealMatrix f, double eps) {
+        boolean stop = false;
         int iterations = 0;
-        double[] newVars = new double[m.getRowDimension()];
-        double[] oldVars = new double[m.getRowDimension()];
+        double[] newVarsValues = new double[m.getRowDimension()];
+        double[] oldVarsValues = new double[m.getRowDimension()];
         double[] errors = new double[m.getRowDimension()];
-        //Начальное приближение
+        //Начальное приближение вектор свободных членов
         for (int i = 0; i < m.getColumnDimension(); i++) {
-            newVars[i] = f.getRow(i)[0];
-            oldVars[i] = f.getRow(i)[0];
+            newVarsValues[i] = f.getRow(i)[0];
+            oldVarsValues[i] = f.getRow(i)[0];
         }
-        System.out.println(Arrays.toString(newVars));
-        while (true) {
+        while (!stop) {
             iterations++;
-            boolean stop = false;
             for (int i = 0; i < m.getRowDimension(); i++) {
                 double variable_value = 0;
                 for (int j = 0; j < m.getColumnDimension(); j++) {
                     if (i <= j) {
-                        variable_value += m.getRow(i)[j] * oldVars[j];
+                        variable_value += m.getRow(i)[j] * oldVarsValues[j];
                     } else {
-                        variable_value += m.getRow(i)[j] * newVars[j];
+                        variable_value += m.getRow(i)[j] * newVarsValues[j];
                     }
                 }
                 variable_value += f.getRow(i)[0];
-                newVars[i] = variable_value;
+                newVarsValues[i] = variable_value;
             }
             for (int i = 0; i < m.getRowDimension(); i++) {
-                errors[i] = Math.abs(newVars[i] - oldVars[i]);
+                errors[i] = Math.abs(newVarsValues[i] - oldVarsValues[i]);
                 if (errors[i] < eps) {
-                    System.out.println(newVars[i] - oldVars[i] + " < eps");
                     stop = true;
                     break;
                 } else {
-                    oldVars[i] = newVars[i];
+                    oldVarsValues[i] = newVarsValues[i];
                 }
             }
-            if (stop) {
-                break;
-            }
         }
-        print(newVars, errors, iterations);
+        print(newVarsValues, errors, iterations);
     }
 
     public void print(double[] newVars, double[] errors, int iterations) {
@@ -129,6 +123,6 @@ public class GaussZeidel {
             System.out.println("x" + (i + 1) + " = " + newVars[i]);
         System.out.println("Столбец погрешностей:");
         for (int i = 0; i < errors.length; i++)
-            System.out.println("x" + (i + 1) + " = " + errors[i]);
+            System.out.println("delta x" + (i + 1) + " = " + errors[i]);
     }
 }
