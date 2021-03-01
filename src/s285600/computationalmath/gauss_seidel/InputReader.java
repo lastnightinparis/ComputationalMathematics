@@ -26,7 +26,6 @@ public class InputReader {
 
     // src/s285600/computationalmath/gauss_seidel/input.txt
     private void readFile(String filename) {
-        //filename = "src/s285600/computationalmath/gauss_seidel/input.txt";
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             int n = Integer.parseInt(br.readLine());
             double[][] matrix = new double[n][n];
@@ -39,8 +38,8 @@ public class InputReader {
                 j[i][0] = free[i];
             double eps = Double.parseDouble(br.readLine());
             new GaussZeidel().solve(matrix, j, eps);
-        } catch (IOException e) {
-            //TODO handle exception
+        } catch (NumberFormatException | IOException | NullPointerException e) {
+            System.out.println("Произошла ошибка при чтении файла.");
         }
 
     }

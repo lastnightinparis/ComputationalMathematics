@@ -3,7 +3,10 @@ package s285600.computationalmath.gauss_seidel;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.util.Precision;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,6 +17,15 @@ import java.util.stream.Collectors;
 
 public class GaussZeidel {
     public void solve(double[][] m, double[][] f, double eps) {
+        if (eps <= 0) {
+            System.out.println("Неверная погрешность.");
+            try {
+                new InputReader().read();
+            } catch (IOException e) {
+                System.out.println("Произошла непоправимая ошибка, кошмар!");
+                System.exit(0);
+            }
+        }
         RealMatrix matrix = MatrixUtils.createRealMatrix(m);
         RealMatrix free_column = MatrixUtils.createRealMatrix(f);
         normalizeMatrix(matrix, free_column, eps);
@@ -78,16 +90,15 @@ public class GaussZeidel {
         return true;
     }
 
-    public void solution(RealMatrix m, RealMatrix f, double eps) {
+    public void solution(RealMatrix m, RealMatrix free_column, double eps) {
         boolean stop = false;
         int iterations = 0;
         double[] newVarsValues = new double[m.getRowDimension()];
         double[] oldVarsValues = new double[m.getRowDimension()];
         double[] errors = new double[m.getRowDimension()];
-        //Начальное приближение вектор свободных членов
         for (int i = 0; i < m.getColumnDimension(); i++) {
-            newVarsValues[i] = f.getRow(i)[0];
-            oldVarsValues[i] = f.getRow(i)[0];
+            newVarsValues[i] = free_column.getRow(i)[0];
+            oldVarsValues[i] = free_column.getRow(i)[0];
         }
         while (!stop) {
             iterations++;
@@ -100,7 +111,7 @@ public class GaussZeidel {
                         variable_value += m.getRow(i)[j] * newVarsValues[j];
                     }
                 }
-                variable_value += f.getRow(i)[0];
+                variable_value += free_column.getRow(i)[0];
                 newVarsValues[i] = variable_value;
             }
             for (int i = 0; i < m.getRowDimension(); i++) {
@@ -113,16 +124,24 @@ public class GaussZeidel {
                 }
             }
         }
-        print(newVarsValues, errors, iterations);
+        print(newVarsValues, errors, iterations, eps);
     }
 
-    public void print(double[] newVars, double[] errors, int iterations) {
+    public void print(double[] newVars, double[] errors, int iterations, double eps) {
         System.out.println("Количество итераций: " + iterations);
         System.out.println("Столбец неизвестных:");
         for (int i = 0; i < newVars.length; i++)
-            System.out.println("x" + (i + 1) + " = " + newVars[i]);
+            System.out.println(myRound(newVars[i], eps));
+        System.out.println("Заданная погрешность: " + eps);
         System.out.println("Столбец погрешностей:");
         for (int i = 0; i < errors.length; i++)
-            System.out.println("delta x" + (i + 1) + " = " + errors[i]);
+            System.out.println("delta x" + (i + 1) + " = " + myRound(errors[i], eps / 10));
+    }
+
+    public Double myRound(double x, double eps) {
+        if (eps < 1)
+            return Precision.round(x - x % eps, BigDecimal.valueOf(eps).scale());
+        else
+            return x - x % eps;
     }
 }
