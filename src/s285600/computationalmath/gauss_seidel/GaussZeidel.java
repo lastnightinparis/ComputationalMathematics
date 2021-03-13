@@ -7,7 +7,9 @@ import org.apache.commons.math3.util.Precision;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
  */
 
 public class GaussZeidel {
+    private final Integer MAX_ITERATIONS = 1000;
+
     public void solve(double[][] m, double[][] f, double eps) {
         if (eps <= 0) {
             System.out.println("Неверная погрешность.");
@@ -41,10 +45,11 @@ public class GaussZeidel {
             RealMatrix transformed = modifyToDiagonalPred(matrix, free_column);
             if (diagonalPredominance(transformed)) {
                 System.out.println("Матрица приведена к виду диагонального преобладания");
+                System.out.println("Полученная матрица:" + transformed.toString());
                 transform(transformed, free_column);
                 solution(transformed, free_column, eps);
             } else {
-                System.out.println("Матрица не может быть приведена к виду диагонального преобладания");
+                System.out.println("Матрица не может быть приведена к виду диагонального преобладания.");
             }
         }
     }
@@ -52,6 +57,7 @@ public class GaussZeidel {
     //src/s285600/computationalmath/gauss_seidel/input.txt
     public RealMatrix modifyToDiagonalPred(RealMatrix m, RealMatrix f) {
         RealMatrix transformed = MatrixUtils.createRealMatrix(m.getRowDimension(), m.getColumnDimension());
+        //копия матрицы f, чтобы поменять строки местами
         RealMatrix g = MatrixUtils.createRealMatrix(f.getRowDimension(), f.getColumnDimension());
         for (int i = 0; i < m.getRowDimension(); i++) {
             Double[] column = ArrayUtils.toObject(m.getColumn(i));
@@ -68,13 +74,13 @@ public class GaussZeidel {
         for (int i = 0; i < m.getRowDimension(); i++) {
             Double[] row = ArrayUtils.toObject(m.getRow(i));
             List<Double> list = Arrays.asList(row);
-            Double y = list.get(i);
-            List<Double> collect = list.stream().map(x -> -x / y).collect(Collectors.toList());
+            Double xi = list.get(i);
+            List<Double> collect = list.stream().map(v -> -v / xi).collect(Collectors.toList());
             collect.set(i, -collect.get(i) - 1);
             m.setRow(i, collect.stream().mapToDouble(Double::doubleValue).toArray());
             double[] f_row = f.getRow(i);
             for (int j = 0; j < f_row.length; j++)
-                f_row[j] = f_row[j] / y;
+                f_row[j] = f_row[j] / xi;
             f.setRow(i, f_row);
         }
     }
@@ -83,7 +89,7 @@ public class GaussZeidel {
         for (int i = 0; i < matrix.getRowDimension(); i++) {
             double[] row = matrix.getRow(i);
             double sum = Math.abs(Arrays.stream(row).sum()) - Math.abs(row[i]);
-            if (Math.abs(row[i]) < Math.abs(sum)) {
+            if (Math.abs(row[i]) <= Math.abs(sum)) {
                 return false;
             }
         }
@@ -101,6 +107,8 @@ public class GaussZeidel {
             oldVarsValues[i] = free_column.getRow(i)[0];
         }
         while (!stop) {
+            if (iterations > MAX_ITERATIONS)
+                break;
             iterations++;
             for (int i = 0; i < m.getRowDimension(); i++) {
                 double variable_value = 0;
@@ -118,24 +126,31 @@ public class GaussZeidel {
                 errors[i] = Math.abs(newVarsValues[i] - oldVarsValues[i]);
                 if (errors[i] < eps) {
                     stop = true;
-                    break;
                 } else {
-                    oldVarsValues[i] = newVarsValues[i];
+                    stop = false;
+                    break;
                 }
+            }
+            for (int i = 0; i < m.getRowDimension(); i++) {
+                oldVarsValues[i] = newVarsValues[i];
             }
         }
         print(newVarsValues, errors, iterations, eps);
     }
 
     public void print(double[] newVars, double[] errors, int iterations, double eps) {
-        System.out.println("Количество итераций: " + iterations);
-        System.out.println("Столбец неизвестных:");
-        for (int i = 0; i < newVars.length; i++)
-            System.out.println(myRound(newVars[i], eps));
-        System.out.println("Заданная погрешность: " + eps);
-        System.out.println("Столбец погрешностей:");
-        for (int i = 0; i < errors.length; i++)
-            System.out.println("delta x" + (i + 1) + " = " + myRound(errors[i], eps / 10));
+        if (iterations > MAX_ITERATIONS)
+            System.out.println("Метод Гаусса-Зейделя не может найти решение для данной системы за допустимое количество итераций");
+        else {
+            System.out.println("Количество итераций: " + iterations);
+            System.out.println("Столбец неизвестных:");
+            for (int i = 0; i < newVars.length; i++)
+                System.out.println("x" + (i + 1) + " " + myRound(newVars[i], eps));
+            System.out.println("Заданная погрешность: " + eps);
+            System.out.println("Столбец погрешностей:");
+            for (int i = 0; i < errors.length; i++)
+                System.out.println("delta x" + (i + 1) + " = " + myRound(errors[i], eps / 10));
+        }
     }
 
     public Double myRound(double x, double eps) {

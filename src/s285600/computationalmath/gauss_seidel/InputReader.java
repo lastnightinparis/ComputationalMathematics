@@ -38,7 +38,7 @@ public class InputReader {
                 j[i][0] = free[i];
             double eps = Double.parseDouble(br.readLine());
             new GaussZeidel().solve(matrix, j, eps);
-        } catch (NumberFormatException | IOException | NullPointerException e) {
+        } catch (NumberFormatException | IOException | NullPointerException | NegativeArraySizeException e) {
             System.out.println("Произошла ошибка при чтении файла.");
         }
 
@@ -105,6 +105,8 @@ public class InputReader {
         for (int i = 0; i < n; i++){
             matrix[i][i] = Arrays.stream(matrix[i]).sum() + Math.random() * ((max - min) + 1) + min;
         }
+        System.out.println("Сгенерированная матрица:" + Arrays.deepToString(matrix));
+        System.out.println("Свободные коэффициенты:" + Arrays.deepToString(free));
         new GaussZeidel().solve(matrix, free, eps);
     }
 }
