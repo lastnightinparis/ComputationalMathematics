@@ -5,7 +5,6 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.Precision;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,36 +19,32 @@ import java.util.stream.Collectors;
 public class GaussZeidel {
     private final Integer MAX_ITERATIONS = 1000;
 
-    public void solve(double[][] m, double[][] f, double eps) {
-        if (eps <= 0) {
-            System.out.println("Неверная погрешность.");
-            try {
-                new InputReader().read();
-            } catch (IOException e) {
-                System.out.println("Произошла непоправимая ошибка, кошмар!");
-                System.exit(0);
-            }
-        }
+    public double[] solve(double[][] m, double[][] f, double eps) {
+//        if (eps <= 0) {
+//            System.out.println("Неверная погрешность.");
+//            try {
+//                new InputReader().read();
+//            } catch (IOException e) {
+//                System.out.println("Произошла непоправимая ошибка, кошмар!");
+//                System.exit(0);
+//            }
+//        }
         RealMatrix matrix = MatrixUtils.createRealMatrix(m);
         RealMatrix free_column = MatrixUtils.createRealMatrix(f);
-        normalizeMatrix(matrix, free_column, eps);
+        return normalizeMatrix(matrix, free_column, eps);
     }
 
-    public void normalizeMatrix(RealMatrix matrix, RealMatrix free_column, double eps) {
+    public double[] normalizeMatrix(RealMatrix matrix, RealMatrix free_column, double eps) {
         if (diagonalPredominance(matrix)) {
-            System.out.println("Матрица обладает диагональным преобладанием");
             transform(matrix, free_column);
-            solution(matrix, free_column, eps);
+            return solution(matrix, free_column, eps);
         } else {
-            System.out.println("Исходная матрица не имеет диагонального преобладания, но мы попробуем привести её к этому виду");
             RealMatrix transformed = modifyToDiagonalPred(matrix, free_column);
             if (diagonalPredominance(transformed)) {
-                System.out.println("Матрица приведена к виду диагонального преобладания");
-                System.out.println("Полученная матрица:" + transformed.toString());
                 transform(transformed, free_column);
-                solution(transformed, free_column, eps);
+                return solution(transformed, free_column, eps);
             } else {
-                System.out.println("Матрица не может быть приведена к виду диагонального преобладания.");
+                return new double[matrix.getRowDimension()];
             }
         }
     }
@@ -57,7 +52,6 @@ public class GaussZeidel {
     //src/s285600/computationalmath/gauss_seidel/input.txt
     public RealMatrix modifyToDiagonalPred(RealMatrix m, RealMatrix f) {
         RealMatrix transformed = MatrixUtils.createRealMatrix(m.getRowDimension(), m.getColumnDimension());
-        //копия матрицы f, чтобы поменять строки местами
         RealMatrix g = MatrixUtils.createRealMatrix(f.getRowDimension(), f.getColumnDimension());
         for (int i = 0; i < m.getRowDimension(); i++) {
             Double[] column = ArrayUtils.toObject(m.getColumn(i));
@@ -96,7 +90,7 @@ public class GaussZeidel {
         return true;
     }
 
-    public void solution(RealMatrix m, RealMatrix free_column, double eps) {
+    public double[] solution(RealMatrix m, RealMatrix free_column, double eps) {
         boolean stop = false;
         int iterations = 0;
         double[] newVarsValues = new double[m.getRowDimension()];
@@ -135,7 +129,8 @@ public class GaussZeidel {
                 oldVarsValues[i] = newVarsValues[i];
             }
         }
-        print(newVarsValues, errors, iterations, eps);
+        //print(newVarsValues, errors, iterations, eps);
+        return newVarsValues;
     }
 
     public void print(double[] newVars, double[] errors, int iterations, double eps) {
